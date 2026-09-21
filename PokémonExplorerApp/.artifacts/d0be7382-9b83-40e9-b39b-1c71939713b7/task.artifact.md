@@ -1,7 +1,0 @@
-- [ ] Updating dependencies (Room, KSP, BCrypt)
-- [ ] Implementing Room Database (User, UserDao, AppDatabase)
-- [ ] Implementing Security (PasswordHasher, AuthRepository)
-- [ ] Updating AppState with Auth logic
-- [ ] Creating Login and Register screens
-- [ ] Wiring up Navigation in AppRoot
-- [ ] Verification and testing
