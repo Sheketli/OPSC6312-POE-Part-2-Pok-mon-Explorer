@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_background">#0D1020</color>
+    <color name="app_background_deep">#07071A</color>
+    <color name="poke_red">#EE1515</color>
+    <color name="poke_yellow">#FFCB05</color>
+    <color name="ic_launcher_background">#0D1020</color>
+</resources>
