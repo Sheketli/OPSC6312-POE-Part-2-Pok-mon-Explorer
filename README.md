@@ -150,3 +150,11 @@ Pokémon data from [PokéAPI](https://pokeapi.co). Sprites from the
 Pokémon and all related names are trademarks of Nintendo / Game Freak / Creatures
 Inc. This is a non-commercial fan project, not affiliated with The Pokémon
 Company.
+
+## GitHub Link
+
+https://github.com/Sheketli/OPSC6312-POE-Part-2-Pok-mon-Explorer.git
+
+## Video Presentation YouTube Link
+
+https://youtu.be/2-7nq8ZJ5-I
