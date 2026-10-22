@@ -1,14 +1,12 @@
-OPSC6312-POE-Part-2-Pok-mon-Explorer
-
 # Pokémon Explorer
 
 An Android Pokédex companion — browse, search, compare and collect Pokémon from
 [PokéAPI](https://pokeapi.co), wrapped in a game-UI look inspired by the in-game
 Pokédex and Pokémon trading cards.
 
-Built with **Kotlin** and **Jetpack Compose** (Material 3).
+Built with **Kotlin**, **Android Views (ViewBinding)**, and **Room Database**.
 
-[![Android CI](https://github.com/MJjimmy/Pok-mon/actions/workflows/android-ci.yml/badge.svg)](https://github.com/MJjimmy/Pok-mon/actions/workflows/android-ci.yml)
+[![Android CI](https://github.com/Sheketli/OPSC6312-POE-Part-2-Pok-mon-Explorer/actions/workflows/android-ci.yml/badge.svg)](https://github.com/Sheketli/OPSC6312-POE-Part-2-Pok-mon-Explorer/actions/workflows/android-ci.yml)
 
 The full design brief lives in [`design/pokemon-explorer-design.md`](design/pokemon-explorer-design.md).
 
@@ -19,6 +17,7 @@ The full design brief lives in [`design/pokemon-explorer-design.md`](design/poke
 | Screen | What it does |
 | --- | --- |
 | **Splash** | Cinematic Poké Ball open, logo and tagline |
+| **Login / Register** | User authentication with secure local password hashing (Room & jBCrypt) |
 | **Explore** | Featured hero Pokémon, Random Discovery, type filter chips, 2-column card grid |
 | **Search** | Debounced lookup by name or Pokédex number, with popular searches and an empty state |
 | **Detail** | Hero artwork on a type gradient, Normal/Shiny toggle, height/weight, abilities, animated base stats, moves, favourite / catch / compare actions |
@@ -53,9 +52,8 @@ Versions are centralised in `gradle/libs.versions.toml`.
 | | |
 | --- | --- |
 | Android Gradle Plugin | 8.5.2 |
-| Kotlin | 2.0.20 (Compose compiler plugin) |
+| Kotlin | 2.0.20 |
 | Gradle | 8.9 |
-| Compose BOM | 2024.09.00 |
 | minSdk / targetSdk / compileSdk | 24 / 34 / 34 |
 
 ## Project layout
@@ -64,17 +62,16 @@ Versions are centralised in `gradle/libs.versions.toml`.
 app/src/main/java/com/pokemon/explorer/
 ├── MainActivity.kt          Single activity: splash → app shell, back handling
 ├── data/
+│   ├── db/                  Room entities and database for User authentication
+│   ├── repository/          AuthRepository for managing logins
 │   ├── Models.kt            PokemonSummary, PokemonDetail, Stat, Ability, Sprites
 │   ├── TypeData.kt          Type colours, contrast helper, full 18-type matchup chart
 │   └── PokeApi.kt           Dependency-free PokéAPI client + in-memory response cache
 ├── state/
-│   └── AppState.kt          ViewModel: per-tab back stacks, favourites, caught, theme
+│   └── AppState.kt          ViewModel: per-tab back stacks, user sessions, favourites, caught, theme
 └── ui/
-    ├── AppRoot.kt           Screen host + bottom navigation
-    ├── theme/Theme.kt       Palette, spacing, radii, typography, type gradients
-    ├── components/          Pokéball, badges, stat bars, cards, buttons, icons, skeletons
-    │                        (ComponentPreviews.kt previews them all in the IDE)
-    └── screens/             One file per screen, listed above
+    ├── adapters/            RecyclerView adapters for lists and grids
+    └── fragments/           One Fragment per screen, listed above
 ```
 
 Unit tests live in `app/src/test/java/com/pokemon/explorer/` and cover the
@@ -83,32 +80,15 @@ hand-transcribed type chart. Run them with `./gradlew testDebugUnitTest`.
 ### Architecture notes
 
 - **Navigation** is a stack per bottom-nav tab held in `AppState`, so each tab
-  remembers where you were and Back walks that tab's history. No navigation
-  library — it is a direct port of the original context-based approach.
+  remembers where you were and Back walks that tab's history. Fragments are manually swapped via `FragmentManager`.
 - **Networking** uses `HttpURLConnection` and `org.json` (both part of the
   platform) rather than Retrofit, so there is no networking dependency to
   configure. Responses are memoised for the life of the process.
-- **Images** are loaded with [Coil](https://coil-kt.github.io/coil/) from the
+- **Images** are loaded with [Coil](https://coil-kt.github.io/coil/) into `ImageView` from the
   official-artwork sprite set. Normal and shiny artwork both come from one
   helper, `PokeApi.artworkUrl(id, shiny)`.
-- **Icons** are drawn on a Compose `Canvas` in `ui/components/AppIcons.kt`,
-  reproducing the original hand-authored SVG shapes, so there is no icon-font
-  dependency.
-- **Loading states** are modelled as a `LoadState` sealed interface
-  (`Loading` / `Success` / `Failure`) with a `rememberLoadState` helper, so a
-  screen can never render half-loaded.
-- **Touch targets** follow the brief's 48dp minimum. Controls such as
-  `CircleIconButton` and `ToggleSwitch` keep their designed visual size and pad
-  their hit area out to `MinTouchTarget` in `ui/components/Common.kt`.
-
-### Previewing in Android Studio
-
-`ui/components/ComponentPreviews.kt` covers every public component, and
-`ui/screens/ScreenPreviews.kt` covers the three screens that hold no network state
-(Type Guide, Settings, Splash), so those render at full fidelity in the preview
-pane. The data-driven screens — Explore, Search, Detail, Compare, Collection —
-only ever show their loading state under layoutlib, because PokéAPI never resolves
-in the preview renderer. Run the app on a device to check those.
+- **Persistence** User credentials are saved securely in a local `Room` database. Favourites, caught Pokémon, and application preferences are saved via `SharedPreferences`.
+- **Authentication** A full login/register flow ensures data is kept behind a user profile.
 
 ## Differences from the original web prototype
 
@@ -126,20 +106,13 @@ This app replaces an earlier React/Vite prototype. Deliberate changes:
 
 ## Known gaps
 
-- **Light theme is not implemented.** The design brief specifies a single dark
-  "Pokédex at night" look. Settings stores the System/Light/Dark preference but
-  only the dark palette exists, so switching has no visual effect yet.
 - **Searches are exact, by design.** PokéAPI's `/pokemon/{name}` endpoint returns
   a single match, so typing "pika" finds nothing until "pikachu" is complete —
   same behaviour as the prototype. Fuzzy or prefix search would need the full
   name index from `/pokemon?limit=1025`.
-- **No on-device persistence.** Favourites, caught Pokémon and preferences reset
-  when the app process is killed. Adding Room or DataStore is the natural next
-  step.
 - **Bundled fonts were not carried over.** The design uses Nunito, Outfit and
-  JetBrains Mono; the app currently falls back to platform families (see
-  `DisplayFont` / `BodyFont` / `MonoFont` in `ui/theme/Theme.kt`). Drop the TTFs
-  into `app/src/main/res/font/` and swap those three values to match the design
+  JetBrains Mono; the app currently falls back to platform families. Drop the TTFs
+  into `app/src/main/res/font/` and configure them in XML to match the design
   exactly.
 
 ## Attribution
