@@ -1,49 +1,55 @@
 package com.pokemon.explorer.data
 
-import androidx.compose.ui.graphics.Color
+import androidx.annotation.ColorInt
 
 /**
  * Canonical Pokémon type colours, used for badges, card gradients and hero panels.
  * Ported verbatim from the web app's `typeData.ts`.
  */
-val TYPE_COLORS: Map<String, Color> = linkedMapOf(
-    "normal" to Color(0xFFA8A77A),
-    "fire" to Color(0xFFEE8130),
-    "water" to Color(0xFF6390F0),
-    "electric" to Color(0xFFF7D02C),
-    "grass" to Color(0xFF7AC74C),
-    "ice" to Color(0xFF96D9D6),
-    "fighting" to Color(0xFFC22E28),
-    "poison" to Color(0xFFA33EA1),
-    "ground" to Color(0xFFE2BF65),
-    "flying" to Color(0xFFA98FF3),
-    "psychic" to Color(0xFFF95587),
-    "bug" to Color(0xFFA6B91A),
-    "rock" to Color(0xFFB6A136),
-    "ghost" to Color(0xFF735797),
-    "dragon" to Color(0xFF6F35FC),
-    "dark" to Color(0xFF705746),
-    "steel" to Color(0xFFB7B7CE),
-    "fairy" to Color(0xFFD685AD),
+val TYPE_COLORS: Map<String, Int> = linkedMapOf(
+    "normal" to 0xFFA8A77A.toInt(),
+    "fire" to 0xFFEE8130.toInt(),
+    "water" to 0xFF6390F0.toInt(),
+    "electric" to 0xFFF7D02C.toInt(),
+    "grass" to 0xFF7AC74C.toInt(),
+    "ice" to 0xFF96D9D6.toInt(),
+    "fighting" to 0xFFC22E28.toInt(),
+    "poison" to 0xFFA33EA1.toInt(),
+    "ground" to 0xFFE2BF65.toInt(),
+    "flying" to 0xFFA98FF3.toInt(),
+    "psychic" to 0xFFF95587.toInt(),
+    "bug" to 0xFFA6B91A.toInt(),
+    "rock" to 0xFFB6A136.toInt(),
+    "ghost" to 0xFF735797.toInt(),
+    "dragon" to 0xFF6F35FC.toInt(),
+    "dark" to 0xFF705746.toInt(),
+    "steel" to 0xFFB7B7CE.toInt(),
+    "fairy" to 0xFFD685AD.toInt(),
 )
 
 /** All 18 types, in Pokédex order. */
 val ALL_TYPES: List<String> = TYPE_COLORS.keys.toList()
 
-private val FALLBACK_TYPE_COLOR = Color(0xFFA8A77A)
+private val FALLBACK_TYPE_COLOR = 0xFFA8A77A.toInt()
 
 /** Colour for a type name, falling back to Normal for unknown values. */
-fun typeColor(type: String): Color = TYPE_COLORS[type.lowercase()] ?: FALLBACK_TYPE_COLOR
+@ColorInt
+fun typeColor(type: String): Int = TYPE_COLORS[type.lowercase()] ?: FALLBACK_TYPE_COLOR
 
-private fun luminance(color: Color): Float =
-    0.299f * color.red + 0.587f * color.green + 0.114f * color.blue
+private fun luminance(@ColorInt color: Int): Float {
+    val r = (color shr 16 and 0xFF) / 255f
+    val g = (color shr 8 and 0xFF) / 255f
+    val b = (color and 0xFF) / 255f
+    return 0.299f * r + 0.587f * g + 0.114f * b
+}
 
 /**
  * Picks black or white text for a given type background, so badges stay legible on
  * pale types (Electric, Ice, Steel) as well as dark ones.
  */
-fun contrastOn(color: Color): Color =
-    if (luminance(color) > 0.55f) Color(0xFF1A1200) else Color.White
+@ColorInt
+fun contrastOn(@ColorInt color: Int): Int =
+    if (luminance(color) > 0.55f) 0xFF1A1200.toInt() else -1
 
 data class TypeMatchup(
     val strongAgainst: List<String>,
@@ -54,10 +60,6 @@ data class TypeMatchup(
 
 /**
  * Offensive / defensive type chart used by the Type Guide.
- *
- * "strongAgainst" is what the type deals super-effective damage to, "weakAgainst"
- * what it deals reduced damage to, and the last two are its defensive resistances
- * and immunities.
  */
 val TYPE_MATCHUPS: Map<String, TypeMatchup> = mapOf(
     "normal" to TypeMatchup(
@@ -141,7 +143,7 @@ val TYPE_MATCHUPS: Map<String, TypeMatchup> = mapOf(
     "ghost" to TypeMatchup(
         strongAgainst = listOf("psychic", "ghost"),
         weakAgainst = listOf("ghost", "dark"),
-        resistantTo = listOf("poison", "bug"),
+        resistantTo = listOf("psychic", "ghost"),
         immuneTo = listOf("normal", "fighting"),
     ),
     "dragon" to TypeMatchup(

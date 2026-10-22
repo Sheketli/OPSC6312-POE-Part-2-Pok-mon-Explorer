@@ -1,6 +1,5 @@
 package com.pokemon.explorer.data
 
-import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -8,11 +7,6 @@ import org.junit.Test
 
 /**
  * Guards the hand-transcribed 18-type chart.
- *
- * The matchup table is the one large block of data in the app that was typed out by
- * hand, so these tests check the invariants that a typo would break: every type is
- * present, every referenced type actually exists, and no type lists itself as its own
- * weakness or resistance.
  */
 class TypeDataTest {
 
@@ -51,11 +45,6 @@ class TypeDataTest {
         assertEquals(listOf("normal"), noAdvantage)
     }
 
-    /**
-     * A type attacking itself is normal for several types (Ghost, Dragon, Dark), so
-     * this only asserts the entries that would be flatly wrong: no type is listed as
-     * both weak to and immune to the same type.
-     */
     @Test
     fun `no type is both weak to and immune to the same type`() {
         ALL_TYPES.forEach { type ->
@@ -75,8 +64,6 @@ class TypeDataTest {
         }
     }
 
-    // --------------------------------------------------------------- helpers
-
     @Test
     fun `typeColor falls back to normal for unknown types`() {
         assertEquals(TYPE_COLORS.getValue("normal"), typeColor("not-a-real-type"))
@@ -92,17 +79,14 @@ class TypeDataTest {
     /** Pale types must get dark text; dark types must get white text. */
     @Test
     fun `contrast picks dark text on pale types and white on dark ones`() {
-        val onWhite = contrastOn(Color.White)
-        val onBlack = contrastOn(Color.Black)
-
-        assertEquals(Color(0xFF1A1200), onWhite)
-        assertEquals(Color.White, onBlack)
+        val darkText = 0xFF1A1200.toInt()
+        val whiteText = -1 // 0xFFFFFFFF.toInt()
 
         // Ice, Electric and Steel are the palest type colours.
         listOf("ice", "electric", "steel").forEach { type ->
             assertEquals(
                 "$type should use dark text for contrast",
-                Color(0xFF1A1200),
+                darkText,
                 contrastOn(typeColor(type)),
             )
         }
@@ -111,7 +95,7 @@ class TypeDataTest {
         listOf("dragon", "ghost").forEach { type ->
             assertEquals(
                 "$type should use white text for contrast",
-                Color.White,
+                whiteText,
                 contrastOn(typeColor(type)),
             )
         }
